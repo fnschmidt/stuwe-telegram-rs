@@ -88,7 +88,7 @@ pub async fn subscribe(
         } else {
             bot.send_message(
                         msg.chat.id,
-                        "Plan wird ab jetzt automatisch an Wochentagen *06:00 Uhr* gesendet.\n\nÄndern mit /uhrzeit",
+                        "Plan wird ab jetzt automatisch an Wochentagen *06:00 Uhr* gesendet\\.\n\nÄndern mit /uhrzeit",
                     ).parse_mode(ParseMode::MarkdownV2)
                     .await?;
 

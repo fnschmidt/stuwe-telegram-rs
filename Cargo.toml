@@ -24,7 +24,7 @@ regex-lite = "0.1.5"
 reqwest = { version = "0.12.2", features = ["cookies", "json"] }
 reqwest-websocket = "0.4.2"
 rusqlite = { version = "0.32.1" }
-scraper = "0.21.0"
+scraper = "0.22.0"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 static_init = "1.0.3"
