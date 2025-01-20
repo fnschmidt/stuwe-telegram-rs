@@ -213,7 +213,7 @@ fn build_date_string(requested_date: DateTime<Local>) -> String {
     format!("{:04}-{:02}-{:02}", year, month, day)
 }
 
-pub async fn get_mensen() -> Result<BTreeMap<u32, String>> {
+pub async fn get_mensen() -> BTreeMap<u32, String> {
     let client = reqwest::Client::new();
 
     #[derive(serde::Deserialize)]
@@ -222,12 +222,22 @@ pub async fn get_mensen() -> Result<BTreeMap<u32, String>> {
         name: String,
     }
 
-    let mensa_list = client
-        .get(format!("{}/canteens", API_URL.get().unwrap()))
-        .send()
-        .await?
-        .json::<Vec<Mensa>>()
-        .await?;
+    let text = loop {
+        if let Ok(res) = client
+            .get(format!("{}/canteens", API_URL.get().unwrap()))
+            .send()
+            .await
+        {
+            if let Ok(text) = res.text().await {
+                break text;
+            }
+        };
 
-    Ok(mensa_list.into_iter().map(|m| (m.id, m.name)).collect())
+        log::error!("Mensa API unreachable, retry in 5s");
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    };
+
+    let mensa_list: Vec<Mensa> = serde_json::from_str(&text).unwrap();
+
+    mensa_list.into_iter().map(|m| (m.id, m.name)).collect()
 }

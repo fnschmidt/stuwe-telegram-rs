@@ -10,10 +10,19 @@ use teloxide::utils::markdown;
 pub async fn get_mensen() -> Result<BTreeMap<u32, String>> {
     let mut mensen = BTreeMap::new();
     let client = reqwest::Client::new();
-    let res = client
-        .get("https://api.cyber-biene.de/mensaHub/mensa/getMensas")
-        .send()
-        .await?;
+    let res = loop {
+        match client
+            .get("https://api.cyber-biene.de/mensaHub/mensa/getMensas")
+            .send()
+            .await
+        {
+            Ok(res) => break res,
+            Err(_) => {
+                log::error!("MensaHub unreachable, retry in 5s");
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await
+            }
+        }
+    };
     for mensa in res.json::<Vec<GetMensasMensa>>().await? {
         mensen.insert(mensa.id, mensa.name);
     }
