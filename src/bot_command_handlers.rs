@@ -12,7 +12,6 @@ use crate::shared_main::{
     build_meal_message_dispatcher, get_user_registration, insert_user_registration,
     make_commands_keyrow, make_mensa_keyboard,
 };
-use rand::Rng;
 use std::{collections::BTreeMap, time::Instant};
 use teloxide::{prelude::*, types::ParseMode};
 use tokio::sync::broadcast;
@@ -76,7 +75,7 @@ pub async fn subscribe(
 ) -> HandlerResult {
     if let Some(registration) = get_user_registration(msg.chat.id.0) {
         if registration.job_uuid.is_some() {
-            if rand::thread_rng().gen_range(0..10) == 0 {
+            if rand::random_range(0..10) == 0 {
                 send_bloat_image(&bot, msg.chat.id).await;
             }
 

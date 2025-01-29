@@ -3,7 +3,6 @@ use crate::data_types::mm_data_types::{GetMensasMensa, MensiMeal};
 
 use anyhow::Result;
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
-use rand::Rng;
 use std::{collections::BTreeMap, time::Instant};
 use teloxide::utils::markdown;
 
@@ -84,7 +83,7 @@ pub async fn mm_build_meal_msg(
     let now = Instant::now();
 
     // start message formatting
-    let rand_emoji = EMOJIS[rand::thread_rng().gen_range(0..EMOJIS.len())];
+    let rand_emoji = EMOJIS[rand::random_range(0..EMOJIS.len())];
     msg += &format!(
         "{} {} {}\n",
         rand_emoji,

@@ -6,7 +6,6 @@ use crate::data_types::stuwe_data_types::{CanteenMealDiff, MealGroup};
 
 use anyhow::Result;
 use chrono::{DateTime, Datelike, Duration, Local, Weekday};
-use rand::Rng;
 use teloxide::utils::markdown;
 
 use tokio::time::Instant;
@@ -36,7 +35,7 @@ pub async fn stuwe_build_meal_msg(
 
     let mut msg: String = String::new();
     // start message formatting
-    let rand_emoji = EMOJIS[rand::thread_rng().gen_range(0..EMOJIS.len())];
+    let rand_emoji = EMOJIS[rand::random_range(0..EMOJIS.len())];
     msg += &format!(
         "{} {} {}\n",
         rand_emoji,

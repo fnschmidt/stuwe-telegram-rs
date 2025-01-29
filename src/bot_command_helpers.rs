@@ -126,8 +126,8 @@ pub async fn parse_time_send_status_msgs(
 }
 async fn ai_parse_time(txt: &str) -> Result<(u32, u32), TimeParseError> {
     let prompt = format!(
-        "I am looking for a time. If you know which one I mean, ONLY reply in 24 hour format, \
-         else 'null'. Input is in 24hr format. NO EXPLANATION. Input: {}",
+        "I am looking for a time. If you can guess which one I mean, reply in 24 hour format with a colon like \"HH:mm\", \
+         else 'null'. The user uses 24 hour format. NO EXPLANATION. Input: {}",
         txt
     );
 
