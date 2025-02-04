@@ -2,13 +2,12 @@ use crate::constants::{NO_DB_MSG, OLLAMA_HOST, OLLAMA_MODEL};
 use crate::data_types::{
     HandlerResult, MensaKeyboardAction, ParsedTimeAndLastMsgFromDialleougueue, TimeParseError,
 };
-
 use crate::shared_main::{get_user_registration, make_mensa_keyboard};
 
 use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use static_init::dynamic;
+use lazy_static::lazy_static;
 use teloxide::types::InputFile;
 
 use std::collections::BTreeMap;
@@ -179,8 +178,9 @@ async fn ai_parse_time(txt: &str) -> Result<(u32, u32), TimeParseError> {
 }
 
 fn rex_parse_time(txt: &str) -> Result<(u32, u32), TimeParseError> {
-    #[dynamic]
-    static RE: Regex = Regex::new("^([01]?[0-9]|2[0-3]):([0-5][0-9])").unwrap();
+    lazy_static! {
+        static ref RE: Regex = Regex::new("^([01]?[0-9]|2[0-3]):([0-5][0-9])").unwrap();
+    }
     if !RE.is_match(txt) {
         Err(TimeParseError::InvalidTimePassed)
     } else {
