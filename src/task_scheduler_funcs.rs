@@ -1,8 +1,10 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::Timelike;
 use futures_util::TryStreamExt;
 use reqwest::Client;
 use reqwest_websocket::{Message, RequestBuilderExt};
+use serde::Deserialize;
+use serde_json::json;
 use std::{collections::BTreeMap, env, time::Duration};
 use teloxide::{
     Bot,
@@ -14,14 +16,15 @@ use tokio::{sync::broadcast::Sender, time::sleep};
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 use crate::{
-    campusdual_fetcher::{
-        compare_campusdual_grades, compare_campusdual_signup_options, get_campusdual_data,
-        save_campusdual_grades, save_campusdual_signup_options,
-    },
+    // campusdual_fetcher::{
+    //     compare_campusdual_grades, compare_campusdual_signup_options, get_campusdual_data,
+    //     save_campusdual_grades, save_campusdual_signup_options,
+    // },
     constants::{API_URL, BACKEND, CD_DATA, NO_DB_MSG, USER_REGISTRATIONS},
     data_backend::stuwe_parser::{stuwe_build_diff_msg, stuwe_build_meal_msg},
     data_types::{
-        Backend, BroadcastUpdateTask, JobHandlerTask, RegistrationEntry, UpdateRegistrationTask,
+        Backend, BroadcastUpdateTask, Grade, GradeTable, JobHandlerTask, RegistrationEntry,
+        UpdateRegistrationTask,
     },
     db_operations::{
         get_all_user_registrations_db, get_user_allergen_state, get_user_senddiff_state,
@@ -255,7 +258,10 @@ pub async fn start_mensaupd_hook_and_campusdual_job(
         let bot = bot.clone();
 
         Box::pin(async move {
-            check_notify_campusdual_grades_signups(bot).await;
+            match check_notify_htwk_grades(bot).await {
+                Ok(_) => (),
+                Err(e) => log::warn!("HTWK check failed: {}", e),
+            }
         })
     })
     .unwrap();
@@ -287,50 +293,71 @@ async fn await_handle_mealplan_upd(job_handler_tx: Sender<JobHandlerTask>) -> Re
     Ok(())
 }
 
-async fn check_notify_campusdual_grades_signups(bot: Bot) {
+async fn check_notify_htwk_grades(bot: Bot) -> Result<()> {
     if let Some(cd_data) = CD_DATA.get() {
-        log::info!("Updating CampusDual");
-        match get_campusdual_data(cd_data.username.clone(), cd_data.password.clone()).await {
-            Ok((grades, signup_options)) => {
-                if let Some(new_grades) = compare_campusdual_grades(&grades).await {
-                    log::info!("Got new grades! Sending to {}", cd_data.chat_id);
+        log::info!("Updating HTWK");
 
-                    let mut msg = String::from("Neue Note:");
-                    for grade in new_grades {
-                        msg.push_str(&format!("\n{}: {}", grade.name, grade.grade));
-                    }
-                    match bot.send_message(ChatId(cd_data.chat_id), msg).await {
-                        Ok(_) => save_campusdual_grades(&grades).await,
-                        Err(e) => {
-                            log::error!("Failed to send CD grades: {}", e);
-                        }
-                    }
-                }
-                if let Some(new_signup_options) =
-                    compare_campusdual_signup_options(&signup_options).await
+        let client = reqwest::Client::new();
+
+        #[derive(Deserialize, Debug)]
+        struct AuthResponse {
+            token: String,
+        }
+
+        let resp: AuthResponse = client
+            .post(format!("{}/signin", cd_data.htwk_api_url))
+            .json(&json!(
                 {
-                    log::info!("Got new signup options! Sending to {}", cd_data.chat_id);
-
-                    let mut msg = String::from("Neue Anmeldemöglichkeit:");
-                    for signup_option in new_signup_options {
-                        msg.push_str(&format!(
-                            "\n{} ({}) — {}",
-                            signup_option.status, signup_option.verfahren, signup_option.name
-                        ));
-                    }
-                    match bot.send_message(ChatId(cd_data.chat_id), msg).await {
-                        Ok(_) => save_campusdual_signup_options(&signup_options).await,
-                        Err(e) => {
-                            log::error!("Failed to send CD signup options: {}", e);
-                        }
-                    }
+                    "username": cd_data.username,
+                    "password": cd_data.password
                 }
-            }
-            Err(e) => {
-                log::error!("Failed to get CD grades: {}", e);
+            ))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+
+        let all_tables: Vec<GradeTable> = client
+            .get(format!("{}/get_gradetables", cd_data.htwk_api_url))
+            .bearer_auth(resp.token)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+
+        let new_grades = &all_tables
+            .iter()
+            .find(|table| table.title == "Leistungsübersicht im Studiengang Informatik | Master")
+            .context("grade table not found")?
+            .grades;
+
+        let old_grades = std::fs::read("htwk_grades.json")
+            .map(|txt| serde_json::from_slice::<Vec<Grade>>(&txt).unwrap())
+            .unwrap_or_default();
+
+        for new_grade in new_grades.iter() {
+            if !old_grades.iter().any(|old_grade| old_grade == new_grade) {
+                let msg = format!(
+                    "Neue Note: {} - {} ({} ECTS)",
+                    new_grade.pruefungstext,
+                    new_grade.grade.clone().unwrap_or("k.N.".to_string()),
+                    new_grade.ects.clone().unwrap_or("idk".to_string())
+                );
+                let e_msg = teloxide::utils::markdown::escape(&msg);
+
+                bot.send_message(ChatId(cd_data.chat_id), e_msg)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .await?;
             }
         }
+
+        std::fs::write("htwk_grades.json", serde_json::to_vec(&new_grades)?)?;
+        log::info!("HTWK done");
     }
+
+    Ok(())
 }
 
 pub async fn load_jobs_from_db(
