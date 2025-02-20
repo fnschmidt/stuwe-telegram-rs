@@ -1,7 +1,7 @@
 use stuwe_telegram_rs::data_backend::mm_parser::get_mensen;
 // GEANT_OV_RSA_CA_4_tcs-cert3.pem has to be properly set up, eg. in /etc/ssl/certs for Debian
 // (the container image already has it)
-use stuwe_telegram_rs::data_types::CampusDualData;
+use stuwe_telegram_rs::data_types::HtwkData;
 
 use stuwe_telegram_rs::bot_command_handlers::{
     allergene, change_mensa, day_cmd, invalid_cmd, reply_time_dialogue, senddiff,
@@ -41,10 +41,13 @@ struct Args {
     /// The telegram bot token to be used
     #[arg(short, long, env)]
     token: String,
-    #[arg(short, long, env = "CD_USER", id = "CAMPUSDUAL-USER")]
+    #[arg(short, long, env = "HTWK_USER", id = "HTWK-USER")]
     user: Option<String>,
-    #[arg(short, long, env = "CD_PASSWORD", id = "CD-PASSWORD")]
+    #[arg(short, long, env = "HTWK_PASSWORD", id = "HTWK-PASSWORD")]
     password: Option<String>,
+    /// HTWK-API host for getting grades{n}Example: <http://htwk-api:8080>
+    #[arg(long, env = "HTWK_API_HOST")]
+    htwk_host: Option<String>,
     /// The Chat-ID which will receive CampusDual exam scores
     #[arg(short, long, env)]
     chatid: Option<i64>,
@@ -69,12 +72,17 @@ async fn main() {
     OLLAMA_HOST.set(args.ollama_host).unwrap();
     OLLAMA_MODEL.set(args.ollama_model).unwrap();
 
-    if args.user.is_some() && args.password.is_some() && args.chatid.is_some() {
+    if args.user.is_some()
+        && args.password.is_some()
+        && args.chatid.is_some()
+        && args.htwk_host.is_some()
+    {
         CD_DATA
-            .set(CampusDualData {
+            .set(HtwkData {
                 username: args.user.unwrap(),
                 password: args.password.unwrap(),
                 chat_id: args.chatid.unwrap(),
+                htwk_api_url: args.htwk_host.unwrap(),
             })
             .unwrap();
     } else {

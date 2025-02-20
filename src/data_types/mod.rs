@@ -184,31 +184,33 @@ pub struct ParsedTimeAndLastMsgFromDialleougueue {
 }
 
 #[derive(Debug, Clone)]
-pub struct CampusDualData {
+pub struct HtwkData {
     pub username: String,
     pub password: String,
     pub chat_id: i64,
-}
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct CampusDualGrade {
-    pub name: String,
-    pub grade: String,
-    pub subgrades: usize,
+    pub htwk_api_url: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct CampusDualSignupOption {
-    pub name: String,
-    pub verfahren: String,
-    pub status: String,
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct GradeTable {
+    pub stammdaten: Stammdaten,
+    pub title: String,
+    pub semester: String,
+    pub grades: Vec<Grade>,
 }
 
-#[derive(Error, Debug, Clone)]
-pub enum CampusDualError {
-    #[error("CampusDual init failed: {0}")]
-    CdInitFailed(u16),
-    #[error("CampusDual zba_init failed: {0}")]
-    CdZbaFailed(u16),
-    #[error("CampusDual: bad credentials")]
-    CdBadCredentials,
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Stammdaten {
+    pub name: String,
+    pub matnr: String,
+    pub semester_group: String,
+    pub abschluss: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct Grade {
+    pub pruefungsnr: String,
+    pub pruefungstext: String,
+    pub ects: Option<String>,
+    pub grade: Option<String>,
 }
