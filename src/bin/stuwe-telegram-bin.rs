@@ -25,8 +25,8 @@ use std::env;
 use std::sync::RwLock;
 use teloxide::{
     dispatching::{
-        dialogue::{self, InMemStorage},
         UpdateHandler,
+        dialogue::{self, InMemStorage},
     },
     prelude::*,
 };
@@ -84,12 +84,17 @@ async fn main() {
     }
 
     if args.debug {
-        env::set_var("RUST_LOG", "debug");
+        pretty_env_logger::formatted_timed_builder()
+            .filter_level(log::LevelFilter::Debug)
+            .init();
     } else if env::var(pretty_env_logger::env_logger::DEFAULT_FILTER_ENV).is_err() {
-        env::set_var("RUST_LOG", "info");
+        pretty_env_logger::formatted_timed_builder()
+            .filter_level(log::LevelFilter::Info)
+            .init();
+    } else {
+        pretty_env_logger::init_timed();
     }
 
-    pretty_env_logger::init_timed();
     log::info!("Starting bot...");
 
     //// DB setup

@@ -5,10 +5,10 @@ use reqwest::Client;
 use reqwest_websocket::{Message, RequestBuilderExt};
 use std::{collections::BTreeMap, env, time::Duration};
 use teloxide::{
+    Bot,
     payloads::SendMessageSetters,
     requests::Requester,
     types::{ChatId, ParseMode},
-    Bot,
 };
 use tokio::{sync::broadcast::Sender, time::sleep};
 use tokio_cron_scheduler::{Job, JobScheduler};

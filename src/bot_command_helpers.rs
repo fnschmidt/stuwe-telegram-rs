@@ -4,10 +4,10 @@ use crate::data_types::{
 };
 use crate::shared_main::{get_user_registration, make_mensa_keyboard};
 
+use lazy_static::lazy_static;
 use regex_lite::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use lazy_static::lazy_static;
 use teloxide::types::InputFile;
 
 use std::collections::BTreeMap;

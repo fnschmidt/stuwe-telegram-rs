@@ -7,8 +7,8 @@ use teloxide::{
     utils::{command::BotCommands, markdown},
 };
 use teloxide_core::{
-    types::{InlineKeyboardButton, InlineKeyboardMarkup, ParseMode},
     Bot,
+    types::{InlineKeyboardButton, InlineKeyboardMarkup, ParseMode},
 };
 use tokio::sync::broadcast;
 use tokio_cron_scheduler::{Job, JobScheduler};

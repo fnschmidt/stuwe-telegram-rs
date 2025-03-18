@@ -1,4 +1,4 @@
-use crate::data_backend::{escape_markdown_v2, german_date_fmt, EMOJIS};
+use crate::data_backend::{EMOJIS, escape_markdown_v2, german_date_fmt};
 use crate::data_types::mm_data_types::{GetMensasMensa, MensiMeal};
 
 use anyhow::Result;
