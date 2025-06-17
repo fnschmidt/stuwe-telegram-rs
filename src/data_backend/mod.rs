@@ -16,5 +16,19 @@ fn german_date_fmt(date: NaiveDate) -> String {
 }
 
 fn escape_markdown_v2(input: &str) -> String {
-    teloxide::utils::markdown::escape(input)
+    // all 'special' chars have to be escaped when using telegram markdown_v2
+
+    input
+        .replace('.', r"\.")
+        .replace('!', r"\!")
+        .replace('+', r"\+")
+        .replace('-', r"\-")
+        .replace('<', r"\<")
+        .replace('>', r"\>")
+        .replace('(', r"\(")
+        .replace(')', r"\)")
+        .replace('=', r"\=")
+        // workaround for html things not being properly decoded
+        .replace("&amp;", "&")
+        .replace("&nbsp;", r" ")
 }
