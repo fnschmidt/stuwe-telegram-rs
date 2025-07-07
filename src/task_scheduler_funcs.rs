@@ -9,6 +9,7 @@ use teloxide::{
     payloads::SendMessageSetters,
     requests::Requester,
     types::{ChatId, ParseMode},
+    utils::markdown,
 };
 use tokio::{sync::broadcast::Sender, time::sleep};
 use tokio_cron_scheduler::{Job, JobScheduler};
@@ -219,7 +220,12 @@ pub async fn handle_broadcast_update_task(bot: &Bot, job_handler_task: JobHandle
                 let text = match registration_data.senddiff {
                     true => stuwe_build_diff_msg(&diff, registration_data.allergens).await,
                     false => {
-                        stuwe_build_meal_msg(0, diff.canteen_id, registration_data.allergens).await
+                        format!(
+                            "{}\n{}",
+                            markdown::bold(&markdown::underline("Planänderung")),
+                            stuwe_build_meal_msg(0, diff.canteen_id, registration_data.allergens)
+                                .await
+                        )
                     }
                 };
 
