@@ -25,10 +25,9 @@ use crate::{
 };
 
 pub fn get_user_registration(chat_id: i64) -> Option<RegistrationEntry> {
-    let user_data = USER_REGISTRATIONS
+    USER_REGISTRATIONS
         .get()
-        .and_then(|data| data.read().unwrap().get(&chat_id).copied());
-    user_data
+        .and_then(|data| data.read().unwrap().get(&chat_id).copied())
 }
 
 pub fn insert_user_registration(chat_id: i64, entry: RegistrationEntry) {

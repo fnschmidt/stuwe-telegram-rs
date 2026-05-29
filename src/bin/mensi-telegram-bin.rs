@@ -69,12 +69,15 @@ async fn main() {
     OLLAMA_HOST.set(args.ollama_host).unwrap();
     OLLAMA_MODEL.set(args.ollama_model).unwrap();
 
-    if args.user.is_some() && args.password.is_some() && args.chatid.is_some() {
+    if let Some(username) = args.user
+        && let Some(password) = args.password
+        && let Some(chat_id) = args.chatid
+    {
         CD_DATA
             .set(CampusDualData {
-                username: args.user.unwrap(),
-                password: args.password.unwrap(),
-                chat_id: args.chatid.unwrap(),
+                username,
+                password,
+                chat_id,
             })
             .unwrap();
     } else {

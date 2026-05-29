@@ -139,11 +139,10 @@ fn mealgroups_to_msg(meal_groups: &[MealGroup], wants_allergens: bool) -> String
                 // appending ingredient to msg
                 msg += &format!("     + {}\n", markdown::italic(ingredient))
             }
-            if wants_allergens {
-                if let Some(allergens) = sub_meal.allergens.as_ref() {
-                    msg += &format!("    ⓘ {}\n", allergens)
-                }
+            if wants_allergens && let Some(allergens) = sub_meal.allergens.as_ref() {
+                msg += &format!("    ⓘ {}\n", allergens)
             }
+
             // appending price
             if !price_is_shared {
                 msg += &format!("   {}\n", sub_meal.price);
@@ -153,10 +152,10 @@ fn mealgroups_to_msg(meal_groups: &[MealGroup], wants_allergens: bool) -> String
                 msg += &format!("   → {}\n", markdown::bold("Variationen:"));
                 for variation in variations {
                     msg += &format!("       • {}\n", markdown::italic(&variation.name));
-                    if wants_allergens {
-                        if let Some(allergens_and_add) = variation.allergens_and_add.as_ref() {
-                            msg += &format!("         ⓘ {}\n", allergens_and_add)
-                        }
+                    if wants_allergens
+                        && let Some(allergens_and_add) = variation.allergens_and_add.as_ref()
+                    {
+                        msg += &format!("         ⓘ {}\n", allergens_and_add)
                     }
                 }
             }
@@ -226,10 +225,9 @@ pub async fn get_mensen() -> BTreeMap<u32, String> {
             .get(format!("{}/canteens", API_URL.get().unwrap()))
             .send()
             .await
+            && let Ok(text) = res.text().await
         {
-            if let Ok(text) = res.text().await {
-                break text;
-            }
+            break text;
         };
 
         log::error!("Mensa API unreachable, retry in 5s");

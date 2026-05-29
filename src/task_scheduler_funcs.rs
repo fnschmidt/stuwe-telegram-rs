@@ -2,7 +2,7 @@ use anyhow::Result;
 use chrono::Timelike;
 use futures_util::TryStreamExt;
 use reqwest::Client;
-use reqwest_websocket::{Message, RequestBuilderExt};
+use reqwest_websocket::{Message, Upgrade};
 use std::{collections::BTreeMap, env, time::Duration};
 use teloxide::{
     Bot,
@@ -73,13 +73,11 @@ pub async fn handle_update_registration_task(
     if let Some(mensa) = job_handler_task.mensa_id {
         log::info!("{} 📌 to {}", job_handler_task.chat_id.unwrap(), mensa);
     }
-    if job_handler_task.hour.is_some() {
-        log::info!(
-            "{} changed 🕘: {:02}:{:02}",
-            job_handler_task.chat_id.unwrap(),
-            job_handler_task.hour.unwrap(),
-            job_handler_task.minute.unwrap()
-        );
+    if let Some(chat_id) = job_handler_task.chat_id
+        && let Some(hour) = job_handler_task.hour
+        && let Some(minute) = job_handler_task.minute
+    {
+        log::info!("{} changed 🕘: {:02}:{:02}", chat_id, hour, minute);
     }
 
     // reuse old data for unset fields, as the entire row is replaced
